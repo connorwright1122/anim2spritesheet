@@ -91,36 +91,47 @@ class RENDER_PT_model2pixel(bpy.types.Panel):  # class naming convention ‘CATE
         scene = context.scene
         mytool = scene.my_tool
 
+        row = layout.row()
+        row.label(text="Render Settings")
         
         row = layout.row()
-        row.prop(mytool, "my_bool", text="Bool Property")
+        row.prop(mytool, "render_base", text="Base")
+        row.prop(mytool, "render_normal", text="Normal")
         
-        row = layout.row()
-        row.label(text="Resolution")
+        
         row = layout.row()
         row.prop(scene, "resolution_x")
         row.prop(scene, "resolution_y")
+        row = layout.row()
+        row.prop(scene, "keyframe_start")
+        row.prop(scene, "keyframe_end")
+        row.prop(scene, "keyframe_step")
 
-        row = layout.row()
-        row.label(text="Render")
-        row = layout.row()
-        row.operator("render.base", text="Render Base")
-        row = layout.row()
-        row.operator("render.normal", text="Render Normal")
+        #row = layout.row()
+        #row.label(text="Render")
+        #row = layout.row()
+        #row.operator("render.all", text="Render All")
+        #row = layout.row()
+        #row.operator("render.normal", text="Render Normal")
         #row = layout.row()
         #row.operator("object.shade_smooth", text="Shade Smooth")
         row = layout.row()
         #row.prop(scene, "scene.render.filepath", text="")
-        row.prop(scene.render, "filepath", text="Output Directory")
+        row.label(text="Output")
+        row = layout.row()
+        row.prop(scene.render, "filepath", text="")
+        row = layout.row()
+        row.operator("render.all", text="Render")
         #row.operator("render.select_dir", text="Output Directory")
         #row.prop(scene, "render.select_dir")
         
         
-        if (my_bool == True):
+        '''
+        if (mytool.my_bool == True):
             print ("Property Enabled")
         else:
             print ("Property Disabled")
-
+        '''
         
 
 
@@ -139,6 +150,9 @@ def settings_base_render():
     scene = bpy.context.scene
     scene.render.resolution_x = scene.resolution_x
     scene.render.resolution_y = scene.resolution_y
+    scene.frame_start = scene.keyframe_start
+    scene.frame_end = scene.keyframe_end
+    scene.frame_step = scene.keyframe_step
     scene.render.filter_size = 0
     scene.render.film_transparent = True
     scene.render.image_settings.compression = 0
@@ -149,6 +163,9 @@ def settings_normal_render():
     scene = bpy.context.scene
     scene.render.resolution_x = scene.resolution_x
     scene.render.resolution_y = scene.resolution_y
+    scene.frame_start = scene.keyframe_start
+    scene.frame_end = scene.keyframe_end
+    scene.frame_step = scene.keyframe_step
     scene.render.filter_size = 0.01
     scene.render.film_transparent = True
     scene.render.image_settings.compression = 0
@@ -176,11 +193,17 @@ def pack_spritesheet(output_dir, subfolder_name, spritesheet_name):
     
     start_index = 0
     
+    # to skip ds_store file
+    '''
     if isMacOS():
         start_index = 1
         print("MacOS")
     else:
         print("Not mac")
+    '''
+    if images[0].endswith('.DS_Store'):
+        start_index = 1
+        print("MacOS")
         
     print(start_index)
     first_image_path = os.path.join(subfolder_path, images[start_index])
@@ -214,6 +237,36 @@ def pack_spritesheet(output_dir, subfolder_name, spritesheet_name):
     spritesheet.save(spritesheet_path)
     print(f"Spritesheet saved to: {spritesheet_path}")
 
+
+class RENDER_OT_render_all(bpy.types.Operator):
+    bl_idname = "render.all"
+    bl_label = "Render All"
+
+    def execute(self, context):
+        scene = bpy.context.scene
+        mytool = scene.my_tool
+        temp_directory = scene.render.filepath
+        output_dir = bpy.path.abspath(scene.render.filepath)
+        if mytool.render_base:
+            settings_base_render()
+            create_output_directory("Base")
+            bpy.ops.render.render(animation=True)
+            scene.render.filepath = temp_directory
+            pack_spritesheet(output_dir, "Base", "Base_Spritesheet")
+        if mytool.render_normal:
+            settings_normal_render()
+            create_output_directory("Normal")
+            bpy.ops.render.render(animation=True)
+            scene.render.filepath = temp_directory
+            pack_spritesheet(output_dir, "Normal", "Normal_Spritesheet")
+        
+        settings_base_render()
+        #output_dir = bpy.path.abspath(scene.render.filepath)
+        #pack_spritesheet(output_dir, "Base", "Base_Spritesheet")
+        
+        
+        self.report({'INFO'}, f"This is {self.bl_idname}")
+        return {'FINISHED'}
 
 class RENDER_OT_render_base(bpy.types.Operator):
     bl_idname = "render.base"
@@ -292,10 +345,24 @@ class Render_Settings(PropertyGroup):
     bl_options = {'REGISTER'}
     '''
     
+    '''
     my_bool : BoolProperty(
         name="Enable or Disable",
         description="A bool property",
         default = False
+        )
+    '''
+        
+    render_base : BoolProperty(
+        name="Enable or Disable",
+        description="Render base / albedo color spritesheet",
+        default = True
+        )
+        
+    render_normal : BoolProperty(
+        name="Enable or Disable",
+        description="Render normal map spritesheet",
+        default = True
         )
 
     '''
@@ -320,7 +387,7 @@ class Render_Settings(PropertyGroup):
 
 
 
-classes = (RENDER_OT_render_base, RENDER_OT_render_normal, RENDER_PT_model2pixel, SelectDirExample, Render_Settings)
+classes = (RENDER_OT_render_base, RENDER_OT_render_normal, RENDER_OT_render_all, RENDER_PT_model2pixel, SelectDirExample, Render_Settings)
 
 
 
@@ -329,18 +396,37 @@ def register():
         bpy.utils.register_class(cls)
     
     bpy.types.Scene.resolution_x = bpy.props.IntProperty(
-        name="X",
+        name="Resolution X",
         description="Resolution X",
         default=64,
         min=1
     )
     bpy.types.Scene.resolution_y = bpy.props.IntProperty(
-        name="Y",
+        name="Resolution Y",
         description="Resolution Y",
         default=64,
         min=1
     )
     bpy.types.Scene.my_tool = PointerProperty(type=Render_Settings)
+    
+    bpy.types.Scene.keyframe_start = bpy.props.IntProperty(
+        name="Start Frame",
+        description="Keyframe Start",
+        default=1,
+        min=1
+    )
+    bpy.types.Scene.keyframe_end = bpy.props.IntProperty(
+        name="End Frame",
+        description="Keyframe End",
+        default=100,
+        min=1
+    )
+    bpy.types.Scene.keyframe_step = bpy.props.IntProperty(
+        name="Step",
+        description="Keyframe Step",
+        default=1,
+        min=1
+    )
 
 
 
