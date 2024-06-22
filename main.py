@@ -375,6 +375,9 @@ def unregister():
         bpy.utils.unregister_class(cls)
     del bpy.types.Scene.resolution_x
     del bpy.types.Scene.resolution_y
+    del bpy.types.Scene.keyframe_start
+    del bpy.types.Scene.keyframe_end
+    del bpy.types.Scene.keyframe_step
     del bpy.types.Scene.my_tool
 
         
