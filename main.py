@@ -1,16 +1,15 @@
 bl_info = {
     "name": "model2pixel",
     "author": "Connor Wright",
-    "version": (0, 0, 1),
+    "version": (1, 0, 1),
     "blender": (2, 80, 0),
     "location": "3D Viewport > Sidebar > Render category",
-    "description": "My custom operator buttons",
+    "description": "Automated rendering of 3D animations as pixel art spritesheets with albedo and normal maps.",
     "category": "Development",
 }
 
 import bpy
 import os
-#from install_blender_python_module import *
 import sys
 import subprocess
 import platform
@@ -77,14 +76,12 @@ from bpy.props import (StringProperty,
 
 
 
-class RENDER_PT_model2pixel(bpy.types.Panel):  # class naming convention ‘CATEGORY_PT_name’
+class RENDER_PT_model2pixel(bpy.types.Panel):  
+    bl_space_type = "VIEW_3D"  
+    bl_region_type = "UI"  
 
-    # where to add the panel in the UI
-    bl_space_type = "VIEW_3D"  # 3D Viewport area (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/space_type_items.html#rna-enum-space-type-items)
-    bl_region_type = "UI"  # Sidebar region (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/region_type_items.html#rna-enum-region-type-items)
-
-    bl_category = "Render"  # found in the Sidebar
-    bl_label = "model2pixel"  # found at the top of the Panel
+    bl_category = "Render"  
+    bl_label = "model2pixel"  
 
     def draw(self, context):
         layout = self.layout
@@ -93,56 +90,33 @@ class RENDER_PT_model2pixel(bpy.types.Panel):  # class naming convention ‘CATE
 
         row = layout.row()
         row.label(text="Render Settings")
-        
+    
         row = layout.row()
         row.prop(mytool, "render_base", text="Base")
         row.prop(mytool, "render_normal", text="Normal")
         
-        
         row = layout.row()
         row.prop(scene, "resolution_x")
         row.prop(scene, "resolution_y")
+        
         row = layout.row()
         row.prop(scene, "keyframe_start")
         row.prop(scene, "keyframe_end")
         row.prop(scene, "keyframe_step")
 
-        #row = layout.row()
-        #row.label(text="Render")
-        #row = layout.row()
-        #row.operator("render.all", text="Render All")
-        #row = layout.row()
-        #row.operator("render.normal", text="Render Normal")
-        #row = layout.row()
-        #row.operator("object.shade_smooth", text="Shade Smooth")
         row = layout.row()
-        #row.prop(scene, "scene.render.filepath", text="")
         row.label(text="Output")
+        
         row = layout.row()
         row.prop(scene.render, "filepath", text="")
+        
         row = layout.row()
         row.operator("render.all", text="Render")
-        #row.operator("render.select_dir", text="Output Directory")
-        #row.prop(scene, "render.select_dir")
-        
-        
-        '''
-        if (mytool.my_bool == True):
-            print ("Property Enabled")
-        else:
-            print ("Property Disabled")
-        '''
-        
-
-
-
-
 
     
     
 def swap_render_engine(new_engine):
     bpy.context.scene.render.engine = new_engine
-    
     
     
 def settings_base_render():
@@ -171,7 +145,6 @@ def settings_normal_render():
     scene.render.image_settings.compression = 0
     scene.display.shading.studio_light = "check_normal+y.exr"
     scene.display.render_aa = "OFF"
-
 
 
 def create_output_directory(subfolder_name):
@@ -215,13 +188,7 @@ def pack_spritesheet(output_dir, subfolder_name, spritesheet_name):
     rows = int((len(images) - start_index) + columns - 1) // columns
     spritesheet = Image.new('RGBA', (columns * width, rows * height))
     
-    '''
-    for index,image in enumerate(images, start=start_index):
-        with Image.open(subfolder_path, image) as img:
-            x = (index % columns) * width
-            y = (index // columns) * height
-            spritesheet.paste(img, (x,y))
-    '''
+    
     for i in range(start_index, len(images)):
         image_filename = images[i]
       
@@ -247,12 +214,14 @@ class RENDER_OT_render_all(bpy.types.Operator):
         mytool = scene.my_tool
         temp_directory = scene.render.filepath
         output_dir = bpy.path.abspath(scene.render.filepath)
+        
         if mytool.render_base:
             settings_base_render()
             create_output_directory("Base")
             bpy.ops.render.render(animation=True)
             scene.render.filepath = temp_directory
             pack_spritesheet(output_dir, "Base", "Base_Spritesheet")
+            
         if mytool.render_normal:
             settings_normal_render()
             create_output_directory("Normal")
@@ -261,9 +230,6 @@ class RENDER_OT_render_all(bpy.types.Operator):
             pack_spritesheet(output_dir, "Normal", "Normal_Spritesheet")
         
         settings_base_render()
-        #output_dir = bpy.path.abspath(scene.render.filepath)
-        #pack_spritesheet(output_dir, "Base", "Base_Spritesheet")
-        
         
         self.report({'INFO'}, f"This is {self.bl_idname}")
         return {'FINISHED'}
@@ -323,7 +289,6 @@ class SelectDirExample(bpy.types.Operator):
         )
 
     def execute(self, context):
-        #context.scene.output_directory = self.directory
         scene = bpy.context.scene
         scene.render.filepath = self.directory
         print("Selected dir: '" + self.directory + "'")
@@ -344,14 +309,6 @@ class Render_Settings(PropertyGroup):
     bl_label = "Render Settings"
     bl_options = {'REGISTER'}
     '''
-    
-    '''
-    my_bool : BoolProperty(
-        name="Enable or Disable",
-        description="A bool property",
-        default = False
-        )
-    '''
         
     render_base : BoolProperty(
         name="Enable or Disable",
@@ -364,24 +321,6 @@ class Render_Settings(PropertyGroup):
         description="Render normal map spritesheet",
         default = True
         )
-
-    '''
-    my_int : IntProperty(
-        name = "Set a value",
-        description="A integer property",
-        default = 23,
-        min = 10,
-        max = 100
-        )
-
-    my_float : FloatProperty(
-        name = "Set a value",
-        description = "A float property",
-        default = 23.7,
-        min = 0.01,
-        max = 30.0
-        )
-    '''
 
 
 
