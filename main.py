@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "model2pixel",
+    "name": "anim2spritesheet",
     "author": "Connor Wright",
     "version": (1, 0, 1),
     "blender": (2, 80, 0),
@@ -81,7 +81,7 @@ class RENDER_PT_model2pixel(bpy.types.Panel):
     bl_region_type = "UI"  
 
     bl_category = "Render"  
-    bl_label = "model2pixel"  
+    bl_label = "anim2spritesheet"  
 
     def draw(self, context):
         layout = self.layout
@@ -335,13 +335,13 @@ def register():
         bpy.utils.register_class(cls)
     
     bpy.types.Scene.resolution_x = bpy.props.IntProperty(
-        name="Resolution X",
+        name="Res X",
         description="Resolution X",
         default=64,
         min=1
     )
     bpy.types.Scene.resolution_y = bpy.props.IntProperty(
-        name="Resolution Y",
+        name="Res Y",
         description="Resolution Y",
         default=64,
         min=1
@@ -349,13 +349,13 @@ def register():
     bpy.types.Scene.my_tool = PointerProperty(type=Render_Settings)
     
     bpy.types.Scene.keyframe_start = bpy.props.IntProperty(
-        name="Start Frame",
+        name="Start",
         description="Keyframe Start",
         default=1,
         min=1
     )
     bpy.types.Scene.keyframe_end = bpy.props.IntProperty(
-        name="End Frame",
+        name="End",
         description="Keyframe End",
         default=100,
         min=1
