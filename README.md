@@ -13,8 +13,9 @@ This also provides the ability to render normal map spritesheets for dynamic lig
 7. Hit Render button
 
 ## Tips
-* Rendering will create 2 subfolders in the selected output directory (Base, Normal) with all the rendered frames. This will overwrite previous Base/Normal folders in the output directory, so you should create a new directory for every individual sprite. Spritesheets are put in the top level of the selected directory. 
-* Not tested on Linux 
+* Rendering will create 2 subfolders in the selected output directory (Base, Normal) with all the rendered frames. This will overwrite previous Base/Normal folders in the output directory, so you should create a new directory for every individual sprite.
+* Spritesheets are put in the top level of the selected directory. 
+* Not tested on Linux.
 
 ## Resources
 * https://github.com/CGArtPython/blender_plus_python/blob/main/add-ons/simple_custom_panel/simple_custom_panel.py
