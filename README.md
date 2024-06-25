@@ -12,5 +12,5 @@ A Blender addon to automate the creation of pixel art spritesheets from 3D model
 Resources:
 https://github.com/CGArtPython/blender_plus_python/blob/main/add-ons/simple_custom_panel/simple_custom_panel.py
 https://github.com/luckychris/install_blender_python_modules/tree/main
-https://python-pillow.org/
+\nhttps://python-pillow.org/
 https://docs.blender.org/api/current/index.html
