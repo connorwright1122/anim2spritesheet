@@ -17,7 +17,7 @@ This also provides the ability to render normal map spritesheets for dynamic lig
 * Not tested on Linux 
 
 ## Resources
-https://github.com/CGArtPython/blender_plus_python/blob/main/add-ons/simple_custom_panel/simple_custom_panel.py
-https://python-pillow.org/
-https://github.com/luckychris/install_blender_python_modules/tree/main
-https://docs.blender.org/api/current/index.html
+* https://github.com/CGArtPython/blender_plus_python/blob/main/add-ons/simple_custom_panel/simple_custom_panel.py
+* https://python-pillow.org/
+* https://github.com/luckychris/install_blender_python_modules/tree/main
+* https://docs.blender.org/api/current/index.html
