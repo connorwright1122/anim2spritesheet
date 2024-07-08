@@ -94,6 +94,7 @@ class RENDER_PT_model2pixel(bpy.types.Panel):
         row = layout.row()
         row.prop(mytool, "render_base", text="Base")
         row.prop(mytool, "render_normal", text="Normal")
+        row.prop(mytool, "render_emission", text="Emission")
         
         row = layout.row()
         row.prop(scene, "resolution_x")
@@ -130,6 +131,10 @@ def settings_base_render():
     scene.render.filter_size = 0
     scene.render.film_transparent = True
     scene.render.image_settings.compression = 0
+    bpy.context.space_data.shading.type = 'RENDERED'
+    bpy.context.space_data.shading.type = 'MATERIAL'
+    bpy.context.space_data.shading.render_pass = 'COMBINED'
+    bpy.context.space_data.overlay.show_overlays = True
     
     
 def settings_normal_render():
@@ -146,6 +151,21 @@ def settings_normal_render():
     scene.display.shading.studio_light = "check_normal+y.exr"
     scene.display.render_aa = "OFF"
 
+def settings_emission_render():
+    swap_render_engine("BLENDER_EEVEE")
+    scene = bpy.context.scene
+    scene.render.resolution_x = scene.resolution_x
+    scene.render.resolution_y = scene.resolution_y
+    scene.frame_start = scene.keyframe_start
+    scene.frame_end = scene.keyframe_end
+    scene.frame_step = scene.keyframe_step
+    scene.render.filter_size = 0
+    scene.render.film_transparent = True
+    scene.render.image_settings.compression = 0
+    bpy.context.region_data.view_perspective = 'CAMERA'
+    bpy.context.space_data.shading.type = 'RENDERED'
+    bpy.context.space_data.shading.render_pass = 'EMISSION'
+    bpy.context.space_data.overlay.show_overlays = False
 
 def create_output_directory(subfolder_name):
     scene = bpy.context.scene
@@ -228,6 +248,13 @@ class RENDER_OT_render_all(bpy.types.Operator):
             bpy.ops.render.render(animation=True)
             scene.render.filepath = temp_directory
             pack_spritesheet(output_dir, "Normal", "Normal_Spritesheet")
+        
+        if mytool.render_emission:
+            settings_emission_render()
+            create_output_directory("Emission")
+            bpy.ops.render.opengl(animation=True)
+            scene.render.filepath = temp_directory
+            pack_spritesheet(output_dir, "Emission", "Emission_Spritesheet")
         
         settings_base_render()
         
@@ -319,6 +346,12 @@ class Render_Settings(PropertyGroup):
     render_normal : BoolProperty(
         name="Enable or Disable",
         description="Render normal map spritesheet",
+        default = True
+        )
+        
+    render_emission : BoolProperty(
+        name="Enable or Disable",
+        description="Render emission map spritesheet",
         default = True
         )
 
