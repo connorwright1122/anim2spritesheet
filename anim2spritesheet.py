@@ -46,42 +46,23 @@ def python_exec():
 
 
 def installModule(packageName):
-    '''
-    python_exe = python_exec()
-    try:
-        subprocess.call([python_exe, "import ", packageName])
-    except:
-        #python_exe = python_exec()
-       # upgrade pip
-        subprocess.call([python_exe, "-m", "ensurepip"])
-        subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
-       # install required packages
-        subprocess.call([python_exe, "-m", "pip", "install", packageName])
-    '''
     python_exe = python_exec()
     target = os.path.join(sys.prefix, 'lib', 'site-packages')
     try:
         subprocess.call([python_exe, "-m", "ensurepip"])
         subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
        # install required packages
-        #subprocess.call([python_exe, "-m", "pip", "uninstall", packageName])
-        #subprocess.call([python_exe, "-m", "pip", "install", packageName])
         subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', packageName, '-t', target])
-        #subprocess.call([python_exe, "import ", packageName])
     except:
         #python_exe = python_exec()
        # upgrade pip
         subprocess.call([python_exe, "-m", "ensurepip"])
         subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
        # install required packages
-        #subprocess.call([python_exe, "-m", "pip", "uninstall", packageName])
-        #subprocess.call([python_exe, "-m", "pip", "install", packageName])
         subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', packageName, '-t', target])
         
 installModule("Pillow")
-#installModule("Image")
 from PIL import Image
-#from PIL import Image
 
 from bpy.types import (Panel,
                        Operator,
