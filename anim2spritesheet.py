@@ -252,6 +252,8 @@ def pack_spritesheet(output_dir, subfolder_name, spritesheet_name):
 class RENDER_OT_render_all(bpy.types.Operator):
     bl_idname = "render.all"
     bl_label = "Render All"
+    bl_description = "Render all selected maps (Base, Normal, Emission) and generate spritesheets"
+    
 
     def execute(self, context):
         scene = bpy.context.scene
@@ -282,7 +284,7 @@ class RENDER_OT_render_all(bpy.types.Operator):
         
         settings_base_render()
         
-        self.report({'INFO'}, f"This is {self.bl_idname}")
+        self.report({'INFO'}, f"Rendered using function {self.bl_idname}")
         return {'FINISHED'}
 
 class RENDER_OT_render_base(bpy.types.Operator):
@@ -300,8 +302,7 @@ class RENDER_OT_render_base(bpy.types.Operator):
         output_dir = bpy.path.abspath(scene.render.filepath)
         pack_spritesheet(output_dir, "Base", "Base_Spritesheet")
         
-        
-        self.report({'INFO'}, f"This is {self.bl_idname}")
+        self.report({'INFO'}, f"Rendered using function {self.bl_idname}")
         return {'FINISHED'}
     
 
@@ -316,7 +317,7 @@ class RENDER_OT_render_normal(bpy.types.Operator):
         bpy.ops.render.render(animation=True)
         bpy.context.scene.render.filepath = temp_directory
         
-        self.report({'INFO'}, f"This is {self.bl_idname}")
+        self.report({'INFO'}, f"Rendered using function {self.bl_idname}")
         return {'FINISHED'}
 
 
@@ -381,8 +382,6 @@ class Render_Settings(PropertyGroup):
 
 
 
-
-
 classes = (RENDER_OT_render_base, RENDER_OT_render_normal, RENDER_OT_render_all, RENDER_PT_model2pixel, SelectDirExample, Render_Settings)
 
 
@@ -393,13 +392,13 @@ def register():
     
     bpy.types.Scene.resolution_x = bpy.props.IntProperty(
         name="Res X",
-        description="Resolution X",
+        description="X resolution of output images",
         default=64,
         min=1
     )
     bpy.types.Scene.resolution_y = bpy.props.IntProperty(
         name="Res Y",
-        description="Resolution Y",
+        description="Y resolution of output images",
         default=64,
         min=1
     )
@@ -407,19 +406,19 @@ def register():
     
     bpy.types.Scene.keyframe_start = bpy.props.IntProperty(
         name="Start",
-        description="Keyframe Start",
-        default=1,
+        description="Initial keyframe to begin render at",
+        default=0,
         min=1
     )
     bpy.types.Scene.keyframe_end = bpy.props.IntProperty(
         name="End",
-        description="Keyframe End",
+        description="Ending keyframe to stop render at",
         default=100,
         min=1
     )
     bpy.types.Scene.keyframe_step = bpy.props.IntProperty(
         name="Step",
-        description="Keyframe Step",
+        description="Number of frames to skip per step (1 = default)",
         default=1,
         min=1
     )
