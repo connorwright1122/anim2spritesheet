@@ -153,6 +153,7 @@ def settings_normal_render():
     scene.render.filter_size = 0.01
     scene.render.film_transparent = True
     scene.render.image_settings.compression = 0
+    scene.display.shading.light = 'MATCAP'
     scene.display.shading.studio_light = "check_normal+y.exr"
     scene.display.render_aa = "OFF"
 
@@ -224,8 +225,9 @@ def pack_spritesheet(output_dir, subfolder_name, spritesheet_name):
                 y = ((i - start_index) // columns) * height
                 spritesheet.paste(img, (x, y))
 
-    
-    spritesheet_path = os.path.join(output_dir, f"{spritesheet_name}.png")
+    #print("output direc", output_dir)
+    folder_name = os.path.basename(os.path.normpath(output_dir))
+    spritesheet_path = os.path.join(output_dir, f"{folder_name}_{spritesheet_name}.png")
     spritesheet.save(spritesheet_path)
     print(f"Spritesheet saved to: {spritesheet_path}")
 
