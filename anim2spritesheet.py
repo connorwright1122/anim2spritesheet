@@ -1,8 +1,8 @@
 bl_info = {
     "name": "anim2spritesheet",
     "author": "Connor Wright",
-    "version": (1, 0, 1),
-    "blender": (3, 0, 0),
+    "version": (1, 1, 0),
+    "blender": (4, 0, 0),
     "location": "3D Viewport > Sidebar > Render",
     "description": "Automated rendering of 3D animations as pixel art spritesheets with albedo, normal, and emissive maps.",
     "category": "Render",
@@ -14,6 +14,9 @@ import sys
 import subprocess
 import platform
 from bpy.utils import register_class, unregister_class
+
+preview_collection = None
+engine_at_render = ''
 
 def isWindows():
     return os.name == 'nt'
@@ -118,6 +121,18 @@ class RENDER_PT_model2pixel(bpy.types.Panel):
         
         row = layout.row()
         row.operator("render.all", text="Render")
+
+        ## Preview
+        layout.separator()
+        box = layout.box()
+        box.label(text="Pixel Preview")
+        box.operator("render.pixel_preview", text="Refresh Preview", icon='FILE_REFRESH')
+        
+        global preview_collection
+        preview = preview_collection.get("pixel_snapshot")
+        if preview:
+            # Displays the pixelated thumbnail onto the N-panel
+            box.template_icon(icon_value=preview.icon_id, scale=10)
 
     
     
@@ -235,7 +250,7 @@ def pack_spritesheet(output_dir, subfolder_name, spritesheet_name):
 class RENDER_OT_render_all(bpy.types.Operator):
     bl_idname = "render.all"
     bl_label = "Render All"
-    bl_description = "Render all selected maps (Base, Normal, Emission) and generate spritesheets"
+    bl_description = "Render all selected maps (Base, Normal, Emission) and generate spritesheets using the currently selected camera"
     
 
     def execute(self, context):
@@ -303,7 +318,63 @@ class RENDER_OT_render_normal(bpy.types.Operator):
         self.report({'INFO'}, f"Rendered using function {self.bl_idname}")
         return {'FINISHED'}
 
+class RENDER_OT_pixel_preview(bpy.types.Operator):
+    bl_idname = "render.pixel_preview"
+    bl_label = "Generate Pixel Preview"
+    bl_description = "Takes a quick render from the camera view and displays it pixelated"
 
+    def execute(self, context):
+        scene = context.scene
+        
+        # Setup clean caching destination paths
+        cache_dir = bpy.app.tempdir
+        temp_render_path = os.path.join(cache_dir, "raw_preview.png")
+        processed_preview_path = os.path.join(cache_dir, "pixel_preview.png")
+        
+        # Cache current settings to restore afterward
+        old_engine = scene.render.engine
+        old_filepath = scene.render.filepath
+        old_filter = scene.render.filter_size
+        
+        # Enforce setup targets for a clean camera snapshot
+        scene.render.engine = 'BLENDER_EEVEE'
+        scene.render.filepath = temp_render_path
+        scene.render.filter_size = 0  # Turn off anti-aliasing interpolation
+        
+        # Render just the one current frame out
+        bpy.ops.render.render(write_still=True)
+        
+        # Restore configuration properties 
+        scene.render.engine = old_engine
+        scene.render.filepath = old_filepath
+        scene.render.filter_size = old_filter
+        
+        # Process pixelation using Pillow via Nearest Neighbor scaling
+        if os.path.exists(temp_render_path):
+            with Image.open(temp_render_path) as img:
+                # Downscale to match requested addon resolution constraints
+                low_res = img.resize((scene.resolution_x, scene.resolution_y), Image.Resampling.NEAREST)
+                # Scale back up for UI display box rendering sizes
+                preview_img = low_res.resize((256, 256), Image.Resampling.NEAREST)
+                preview_img.save(processed_preview_path)
+            
+            # --- FIXED HERE ---
+            global preview_collection
+            # Clear the old cached preview image out of the collection if it exists
+            if "pixel_snapshot" in preview_collection:
+                preview_collection.clear() 
+            
+            # Load the newly saved image file
+            preview_collection.load("pixel_snapshot", processed_preview_path, 'IMAGE')
+            # ------------------
+            
+            # Force UI regions to refresh visually immediately
+            for window in context.window_manager.windows:
+                for area in window.screen.areas:
+                    if area.type == 'VIEW_3D':
+                        area.tag_redraw()
+                        
+        return {'FINISHED'}
 
 class SelectDirExample(bpy.types.Operator):
     """Create render for all characters"""
@@ -365,11 +436,15 @@ class Render_Settings(PropertyGroup):
 
 
 
-classes = (RENDER_OT_render_base, RENDER_OT_render_normal, RENDER_OT_render_all, RENDER_PT_model2pixel, SelectDirExample, Render_Settings)
+classes = (RENDER_OT_render_base, RENDER_OT_render_normal, RENDER_OT_render_all, RENDER_OT_pixel_preview, RENDER_PT_model2pixel, SelectDirExample, Render_Settings)
 
 
 
 def register():
+    global preview_collection
+    import bpy.utils.previews
+    preview_collection = bpy.utils.previews.new()
+
     for cls in classes:
         bpy.utils.register_class(cls)
     
@@ -410,6 +485,9 @@ def register():
 
 
 def unregister():
+    global preview_collection
+    bpy.utils.previews.remove(preview_collection)
+
     for cls in classes:
         bpy.utils.unregister_class(cls)
     del bpy.types.Scene.resolution_x
